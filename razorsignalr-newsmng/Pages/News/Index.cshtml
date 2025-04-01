@@ -1,0 +1,119 @@
+﻿@page
+@model razorsignalr_newsmng.Pages.News.IndexModel
+
+@{
+	ViewData["Title"] = "Index";
+}
+
+@section Scripts
+{
+	<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+	<script>
+				const connection = new signalR.HubConnectionBuilder()
+					.withUrl("/newsHub")
+					.build();
+
+		connection.on("Change", function() {
+			location.reload();
+		});
+
+		connection.start().catch(function(err) {
+			console.error(err.toString());
+		});
+	</script>
+}
+
+@{
+	if (Model.CurrentUser != null)
+	{
+		<h1>Hello @(Model.CurrentUser.AccountName)</h1>
+	}
+	else
+	{
+		<h1>Hello Guest</h1>
+	}
+}
+
+<p>
+	<a asp-page="Create">Create New</a>
+</p>
+
+<table class="table">
+	<thead>
+		<tr>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].NewsTitle)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].Headline)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].CreatedDate)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].NewsContent)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].NewsSource)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].NewsStatus)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].UpdatedById)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].ModifiedDate)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].Category)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.NewsArticle[0].CreatedBy)
+			</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var item in Model.NewsArticle)
+		{
+			<tr>
+				<td>
+					@Html.DisplayFor(modelItem => item.NewsTitle)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Headline)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.CreatedDate)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.NewsContent)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.NewsSource)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.NewsStatus)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.UpdatedById)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.ModifiedDate)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Category.CategoryDesciption)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.CreatedBy.AccountId)
+				</td>
+				<td>
+					<a asp-page="./Edit" asp-route-id="@item.NewsArticleId">Edit</a> |
+					<a asp-page="./Details" asp-route-id="@item.NewsArticleId">Details</a> |
+					<a asp-page="./Delete" asp-route-id="@item.NewsArticleId">Delete</a>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
