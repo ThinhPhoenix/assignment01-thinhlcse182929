@@ -55,5 +55,10 @@ namespace newsmng_repository
         {
             return NewsArticleDAO.Instance.SearchTrue(title, content);
         }
+
+        public Dictionary<int, int> GetDashboard(int year)
+        {
+            return NewsArticleDAO.Instance.GetDashboard(year);
+        }
     }
 }

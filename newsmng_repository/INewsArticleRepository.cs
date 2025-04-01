@@ -28,5 +28,6 @@ namespace newsmng_repository
         public List<NewsArticle> Search(string title, string content);
         public List<NewsArticle> SearchTrue(string title, string content);
 
+        public Dictionary<int, int> GetDashboard(int year);
     }
 }

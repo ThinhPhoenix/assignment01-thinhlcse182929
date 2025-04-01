@@ -26,7 +26,7 @@
 @{
 	if (Model.CurrentUser != null)
 	{
-		<h1>Hello @(Model.CurrentUser.AccountName)</h1>
+		<h1>Hello <a asp-page="/Accounts/Edit" asp-route-id="@Model.CurrentUser.AccountId">@(Model.CurrentUser.AccountName)</a></h1>
 	}
 	else
 	{

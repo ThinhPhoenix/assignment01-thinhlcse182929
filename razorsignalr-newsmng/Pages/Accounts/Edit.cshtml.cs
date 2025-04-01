@@ -25,6 +25,15 @@ namespace razorsignalr_newsmng.Pages.Accounts
 
         public async Task<IActionResult> OnGetAsync(short id)
         {
+            var user = HttpContext.Session.GetObject<SystemAccount>("user");
+            if (user == null){
+                Response.Redirect("/login");
+            }
+            else if(user.AccountRole != 0){
+                if (user.AccountId != id){
+                    Response.Redirect("/unauthorized");
+                }
+            }
             if (id == null)
             {
                 return NotFound();

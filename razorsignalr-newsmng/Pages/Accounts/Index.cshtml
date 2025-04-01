@@ -29,26 +29,110 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.SystemAccount) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountEmail)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountRole)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountPassword)
-            </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.AccountId">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.AccountId">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.AccountId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.SystemAccount)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AccountName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AccountEmail)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AccountRole)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AccountPassword)
+                </td>
+                <td>
+                    <a asp-page="./Edit" asp-route-id="@item.AccountId">Edit</a> |
+                    <a asp-page="./Details" asp-route-id="@item.AccountId">Details</a> |
+                    <a asp-page="./Delete" asp-route-id="@item.AccountId">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+<h1>Dashboard</h1>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <form method="get">
+            <div class="form-group">
+                <label for="year">Select Year:</label>
+                <select id="year" name="year" class="form-control" onchange="this.form.submit()">
+                    @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                    {
+                        <option value="@y" selected="@(y == Model.SelectedYear)">@y</option>
+                    }
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                Monthly Article Distribution for @Model.SelectedYear
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" width="900" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var ctx = document.getElementById('monthlyChart').getContext('2d');
+
+            var monthlyData = @Html.Raw(Json.Serialize(Model.MonthlyData));
+            var months = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+
+            var dataValues = months.map((month, index) => monthlyData[index + 1] || 0);
+
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Number of Articles',
+                        data: dataValues,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Articles'
+                            },
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -185,5 +185,39 @@ namespace newsmng_dao
                 TotalPages = totalPages
             };
         }
+
+        public Dictionary<int, int> GetDashboard(int year)
+        {
+            // Initialize dictionary with all months set to 0
+            var monthlyData = new Dictionary<int, int>();
+            for (int month = 1; month <= 12; month++)
+            {
+                monthlyData[month] = 0;
+            }
+
+            // Get start and end dates for the year
+            var startDate = new DateTime(year, 1, 1);
+            var endDate = new DateTime(year, 12, 31, 23, 59, 59);
+
+            // Query to get news articles created in the specified year
+            var articlesInYear = _dbContext.NewsArticles
+                .Where(a => a.CreatedDate >= startDate && a.CreatedDate <= endDate)
+                .ToList();
+
+            // Group by month and count
+            // Handle potential null values or date format issues
+            var monthlyGroups = articlesInYear
+                .Where(a => a.CreatedDate != null)
+                .GroupBy(a => ((DateTime)a.CreatedDate).Month)  // Ensure proper DateTime access
+                .Select(g => new { Month = g.Key, Count = g.Count() });
+
+            // Update the dictionary with actual counts
+            foreach (var group in monthlyGroups)
+            {
+                monthlyData[group.Month] = group.Count;
+            }
+
+            return monthlyData;
+        }
     }
 }
