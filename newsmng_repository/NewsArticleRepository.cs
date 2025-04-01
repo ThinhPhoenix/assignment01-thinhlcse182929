@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using newsmng_bussinessobject;
 using newsmng_dao;
+using static newsmng_dao.NewsArticleDAO;
 
 namespace newsmng_repository
 {
@@ -39,6 +40,20 @@ namespace newsmng_repository
         public List<NewsArticle> GetAllTrue()
         {
             return NewsArticleDAO.Instance.GetAllTrue();
+        }
+
+        public PageableResult<NewsArticle> Pageable(List<NewsArticle> data, int curPage, int pageSize){
+            return NewsArticleDAO.Instance.Pageable(data, curPage, pageSize);
+        }
+
+        public List<NewsArticle> Search(string title, string content)
+        {
+            return NewsArticleDAO.Instance.Search(title, content);
+        }
+
+        public List<NewsArticle> SearchTrue(string title, string content)
+        {
+            return NewsArticleDAO.Instance.SearchTrue(title, content);
         }
     }
 }

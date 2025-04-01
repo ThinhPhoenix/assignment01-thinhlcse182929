@@ -100,5 +100,90 @@ namespace newsmng_dao
             }
         }
 
+        public List<NewsArticle> Search(string title, string content)
+        {
+            if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(content))
+                return GetAll();
+
+            if (title != null)
+            {
+                title = title.Trim().ToLower();
+            }
+            if (content != null)
+            {
+                content = content.Trim().ToLower();
+            }
+
+            return _dbContext.NewsArticles
+                .Where(m =>
+                    m.NewsTitle.ToLower().Contains(title) ||
+                    m.NewsContent.ToLower().Contains(content))
+                .OrderBy(e => e.NewsArticleId)
+                .ToList();
+        }
+
+        public List<NewsArticle> SearchTrue(string title, string content)
+        {
+            // If both title and content are empty or whitespace, return all articles with NewsStatus = true
+            if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(content))
+            {
+                return _dbContext.NewsArticles
+                    .Where(m => m.NewsStatus == true)
+                    .OrderBy(e => e.NewsArticleId)
+                    .ToList();
+            }
+
+            // Trim and convert to lowercase for case-insensitive search
+            if (title != null)
+            {
+                title = title.Trim().ToLower();
+            }
+            if (content != null)
+            {
+                content = content.Trim().ToLower();
+            }
+
+            // Return articles with NewsStatus = true and matching title or content
+            return _dbContext.NewsArticles
+                .Where(m =>
+                    m.NewsStatus == true && // Ensure only articles with NewsStatus = true are considered
+                    (string.IsNullOrEmpty(title) || m.NewsTitle.ToLower().Contains(title)) && // Match title if provided
+                    (string.IsNullOrEmpty(content) || m.NewsContent.ToLower().Contains(content))) // Match content if provided
+                .OrderBy(e => e.NewsArticleId)
+                .ToList();
+        }
+
+        public class PageableResult<T>
+        {
+            public List<T> Data { get; set; }
+            public int TotalPages { get; set; }
+        }
+
+        public PageableResult<NewsArticle> Pageable(List<NewsArticle> data, int curPage, int pageSize)
+        {
+            if (curPage <= 0)
+                throw new ArgumentException("Current page must be greater than 0.");
+            if (pageSize <= 0)
+                throw new ArgumentException("Number of items per page must be greater than 0.");
+
+            // Get total count of items
+            int totalItems = data.Count();
+
+            // Calculate total pages
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            // Get data for current page
+            var Res = data
+                .OrderBy(e => e.NewsArticleId) // Make sure results are in a deterministic order
+                .Skip((curPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new PageableResult<NewsArticle>
+            {
+                Data = Res,
+                TotalPages = totalPages
+            };
+        }
     }
 }

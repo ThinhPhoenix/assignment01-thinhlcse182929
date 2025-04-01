@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using newsmng_bussinessobject;
 using newsmng_dao;
+using static newsmng_dao.NewsArticleDAO;
 
 namespace newsmng_repository
 {
@@ -21,6 +22,11 @@ namespace newsmng_repository
         public void Delete(string id);
 
         public List<NewsArticle> GetAllTrue();
+
+        public PageableResult<NewsArticle> Pageable(List<NewsArticle> data, int curPage, int pageSize);
+
+        public List<NewsArticle> Search(string title, string content);
+        public List<NewsArticle> SearchTrue(string title, string content);
 
     }
 }

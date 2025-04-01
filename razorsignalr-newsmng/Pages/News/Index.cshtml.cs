@@ -28,6 +28,14 @@ namespace razorsignalr_newsmng.Pages.News
         [BindProperty]
         public SystemAccount CurrentUser { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string SearchNewsTitle { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string SearchNewsContent { get; set; }
+
+        public int CurrentPage { get; set; }
+        public int TotalPages { get; set; }
+
         public async Task OnGetAsync()
         {
             CurrentUser = HttpContext.Session.GetObject<SystemAccount>("user") ?? new SystemAccount { AccountName = "Guest" };
@@ -35,17 +43,29 @@ namespace razorsignalr_newsmng.Pages.News
             // Initialize CurrentUser to avoid null reference exceptions
             CurrentUser = new SystemAccount { AccountName = "Guest" };
 
+            var pageQuery = HttpContext.Request.Query["page"];
+            CurrentPage = 1;
+
+            if (!string.IsNullOrEmpty(pageQuery) && int.TryParse(pageQuery, out int parsedPage))
+            {
+                CurrentPage = parsedPage;
+            }
+
             var user = HttpContext.Session.GetObject<SystemAccount>("user");
             if (user != null)
             {
                 CurrentUser = user;
                 if(user.AccountRole == 1)
                 {
-                    NewsArticle = _newsArticleRepository.GetAll();
+                    dynamic pageable = _newsArticleRepository.Pageable(_newsArticleRepository.Search(SearchNewsTitle, SearchNewsContent), CurrentPage, 3);
+                    TotalPages = pageable.TotalPages;
+                    NewsArticle = pageable.Data;
                 }
                 else
                 {
-                    NewsArticle = _newsArticleRepository.GetAllTrue();
+                    dynamic pageable = _newsArticleRepository.Pageable(_newsArticleRepository.SearchTrue(SearchNewsTitle, SearchNewsContent), CurrentPage, 3);
+                    TotalPages = pageable.TotalPages;
+                    NewsArticle = pageable.Data;
                 }
             }
         }

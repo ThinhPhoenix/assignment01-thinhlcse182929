@@ -38,6 +38,29 @@
 	<a asp-page="Create">Create New</a>
 </p>
 
+
+<div class="search">
+ <form method = "get" class="row mb-3 gap-2">
+  <input type = "text" class="form-control" name="searchNewsTitle" placeholder="Search by news title name..." value="@Model.SearchNewsTitle">
+  <input type = "text" class="form-control" name="searchNewsContent" placeholder="Search by news content..." value="@Model.SearchNewsContent">
+  <button type = "submit" class="btn btn-primary me-md-2">Search</button>
+ </form>
+</div>
+
+<div class="pagination gap-3 mb-2">
+	@{
+		if (Model.CurrentPage > 1)
+		{
+			<a href = "?page=@(Model.CurrentPage - 1)&searchNewsTitle=@(Model.SearchNewsTitle)&searchNewsContent=@(Model.SearchNewsContent)" > Previous </a>
+        }
+		<span>Page @Model.CurrentPage of @Model.TotalPages</span>
+		if (Model.CurrentPage<Model.TotalPages)
+        {
+            <a href = "?page=@(Model.CurrentPage + 1)&searchNewsTitle=@(Model.SearchNewsTitle)&searchNewsContent=@(Model.SearchNewsContent)"> Next </a>
+        }
+	}
+</div>
+
 <table class="table">
 	<thead>
 		<tr>
