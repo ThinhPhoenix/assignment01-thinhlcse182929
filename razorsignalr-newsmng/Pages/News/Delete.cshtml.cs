@@ -50,6 +50,11 @@ namespace razorsignalr_newsmng.Pages.News
             {
                 NewsArticle = newsarticle;
             }
+            // Check if the current user is the author of this news article
+            if (newsarticle.CreatedById != CurrentUser.AccountId)
+            {
+                return RedirectToPage("/unauthorized");
+            }
             return Page();
         }
         [BindProperty]

@@ -20,7 +20,7 @@ namespace razorsignalr_newsmng.Pages.News
         private readonly ICategoryRepository _categoryRepository;
         private readonly IHubContext<NewsHub> _hubContext;
 
-        public EditModel(INewsArticleRepository newsArticleRepository, ISystemAccountRepository systemAccountRepository, ICategoryRepository categoryRepository,IHubContext<NewsHub> hubContext)
+        public EditModel(INewsArticleRepository newsArticleRepository, ISystemAccountRepository systemAccountRepository, ICategoryRepository categoryRepository, IHubContext<NewsHub> hubContext)
         {
             _newsArticleRepository = newsArticleRepository;
             _systemAccountRepository = systemAccountRepository;
@@ -48,9 +48,15 @@ namespace razorsignalr_newsmng.Pages.News
             {
                 return NotFound();
             }
+
+            // Check if the current user is the author of this news article
+            if (newsarticle.CreatedById != CurrentUser.AccountId)
+            {
+                return RedirectToPage("/unauthorized");
+            }
             NewsArticle = newsarticle;
-           ViewData["CategoryId"] = new SelectList(_categoryRepository.GetSelectList(), "Value", "Text");
-           ViewData["CreatedById"] = new SelectList(_systemAccountRepository.GetSelectList(),"Value","Text");
+            ViewData["CategoryId"] = new SelectList(_categoryRepository.GetSelectList(), "Value", "Text");
+            ViewData["CreatedById"] = new SelectList(_systemAccountRepository.GetSelectList(), "Value", "Text");
             return Page();
         }
         [BindProperty]
@@ -58,12 +64,20 @@ namespace razorsignalr_newsmng.Pages.News
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more information, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
-        {;
+        {
+            CurrentUser = HttpContext.Session.GetObject<SystemAccount>("user");
+    
             if (!ModelState.IsValid)
             {
+                ViewData["CategoryId"] = new SelectList(_categoryRepository.GetSelectList(), "Value", "Text");
+                ViewData["CreatedById"] = new SelectList(_systemAccountRepository.GetSelectList(), "Value", "Text");
                 return Page();
             }
-
+    
+            // Update modification information
+            NewsArticle.ModifiedDate = DateTime.Now;
+            NewsArticle.UpdatedById = CurrentUser.AccountId;
+    
             _newsArticleRepository.Update(NewsArticle);
             await _hubContext.Clients.All.SendAsync("Change");
 
