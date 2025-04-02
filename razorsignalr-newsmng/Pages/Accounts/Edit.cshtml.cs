@@ -71,6 +71,17 @@ namespace razorsignalr_newsmng.Pages.Accounts
                 return Page();
             }
 
+            // Get the existing account to preserve role and other data
+            var existingAccount = _systemAccountRepository.GetOne(SystemAccount.AccountId);
+            if (existingAccount == null)
+            {
+                return NotFound();
+            }
+
+            // Preserve the role from the existing account
+            SystemAccount.AccountRole = existingAccount.AccountRole;
+            
+            // Update the account with preserved role
             _systemAccountRepository.Update(SystemAccount);
 
             return RedirectToPage("./Index");
