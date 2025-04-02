@@ -71,6 +71,26 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.NewsArticle.CreatedBy.AccountId)
         </dd>
+        
+        <!-- Tags Section -->
+        <dt class="col-sm-2">
+            Tags
+        </dt>
+        <dd class="col-sm-10">
+            @if (Model.NewsArticle.Tags != null && Model.NewsArticle.Tags.Any())
+            {
+                <div class="d-flex flex-wrap">
+                    @foreach (var tag in Model.NewsArticle.Tags)
+                    {
+                        <span class="badge bg-primary me-2 mb-2">@tag.TagName</span>
+                    }
+                </div>
+            }
+            else
+            {
+                <span>No tags associated with this article</span>
+            }
+        </dd>
     </dl>
 </div>
 <div>
