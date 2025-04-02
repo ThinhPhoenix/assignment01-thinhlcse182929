@@ -55,28 +55,91 @@ namespace newsmng_dao
                 .ToList();
         }
 
-        public void Add(NewsArticle a)
+        public void Add(NewsArticle article)
         {
-            NewsArticle cur = GetOne(a.NewsArticleId);
+            NewsArticle cur = GetOne(article.NewsArticleId);
             if (cur != null)
             {
-                throw new Exception();
+                throw new Exception("News article with this ID already exists");
             }
-            _dbContext.NewsArticles.Add(a);
-            _dbContext.SaveChanges();
-        }
 
-        public void Update(NewsArticle a)
-        {
-            NewsArticle cur = GetOne(a.NewsArticleId);
-            if (cur == null)
+            // Handle the tags properly
+            if (article.Tags != null && article.Tags.Any())
             {
-                throw new Exception();
+                var tagIds = article.Tags.Select(t => t.TagId).ToList();
+
+                // Clear the original collection
+                var originalTags = article.Tags.ToList();
+                article.Tags.Clear();
+
+                // Fetch and attach existing tags from the database
+                foreach (var tagId in tagIds)
+                {
+                    var dbTag = _dbContext.Tags.Find(tagId);
+                    if (dbTag != null)
+                    {
+                        article.Tags.Add(dbTag);
+                    }
+                }
             }
-            _dbContext.Entry(cur).CurrentValues.SetValues(a);
+
+            _dbContext.NewsArticles.Add(article);
             _dbContext.SaveChanges();
         }
 
+        public void Update(NewsArticle article)
+        {
+            NewsArticle existingArticle = _dbContext.NewsArticles
+                .Include(a => a.Tags)
+                .FirstOrDefault(a => a.NewsArticleId.Equals(article.NewsArticleId));
+                
+            if (existingArticle == null)
+            {
+                throw new Exception("News article not found");
+            }
+            
+            // Update basic properties
+            _dbContext.Entry(existingArticle).CurrentValues.SetValues(article);
+            
+            // Handle tag relationships
+            if (article.Tags != null)
+            {
+                // Get the IDs of the new tags
+                var newTagIds = article.Tags.Select(t => t.TagId).ToList();
+                
+                // Remove tags that are no longer selected
+                var tagsToRemove = existingArticle.Tags
+                    .Where(t => !newTagIds.Contains(t.TagId))
+                    .ToList();
+                    
+                foreach (var tag in tagsToRemove)
+                {
+                    existingArticle.Tags.Remove(tag);
+                }
+                
+                // Add newly selected tags
+                foreach (var tagId in newTagIds)
+                {
+                    // Check if the tag is already associated with this article
+                    if (!existingArticle.Tags.Any(t => t.TagId == tagId))
+                    {
+                        // Find the tag in the database
+                        var dbTag = _dbContext.Tags.Find(tagId);
+                        if (dbTag != null)
+                        {
+                            existingArticle.Tags.Add(dbTag);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // If no tags were passed, remove all tags
+                existingArticle.Tags.Clear();
+            }
+            
+            _dbContext.SaveChanges();
+        }
 
         public void Delete(string id)
         {

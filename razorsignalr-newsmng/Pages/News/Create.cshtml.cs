@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using newsmng_bussinessobject;
+using newsmng_dao;
 using newsmng_repository;
 using razorsignalr_newsmng.Hubs;
 
@@ -21,7 +22,11 @@ namespace razorsignalr_newsmng.Pages.News
         private readonly IHubContext<NewsHub> _hubContext;
         private readonly ILogger<CreateModel> _logger;
 
-        public CreateModel(ICategoryRepository categoryRepository, ISystemAccountRepository systemAccountRepository, INewsArticleRepository newsArticleRepository, IHubContext<NewsHub> hubContext, ILogger<CreateModel> logger)
+        public CreateModel(ICategoryRepository categoryRepository,
+                          ISystemAccountRepository systemAccountRepository,
+                          INewsArticleRepository newsArticleRepository,
+                          IHubContext<NewsHub> hubContext,
+                          ILogger<CreateModel> logger)
         {
             _categoryRepository = categoryRepository;
             _systemAccountRepository = systemAccountRepository;
@@ -35,6 +40,11 @@ namespace razorsignalr_newsmng.Pages.News
         [BindProperty]
         public NewsArticle NewsArticle { get; set; } = default!;
 
+        [BindProperty]
+        public List<int> SelectedTagIds { get; set; } = new List<int>();
+
+        public List<Tag> AvailableTags { get; set; } = new List<Tag>();
+
         public IActionResult OnGet()
         {
             // Get user from session
@@ -43,8 +53,13 @@ namespace razorsignalr_newsmng.Pages.News
             {
                 return RedirectToPage("/unauthorized");
             }
+
+            // Load categories for dropdown
             ViewData["CategoryId"] = new SelectList(_categoryRepository.GetSelectList(), "Value", "Text");
             ViewData["CreatedById"] = new SelectList(_systemAccountRepository.GetSelectList(), "Value", "Text");
+
+            // Load all available tags
+            AvailableTags = TagDAO.Instance.GetAll();
 
             // Initialize NewsArticle if it's null
             NewsArticle = NewsArticle ?? new NewsArticle();
@@ -56,7 +71,6 @@ namespace razorsignalr_newsmng.Pages.News
             return Page();
         }
 
-        // For more information, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -64,22 +78,39 @@ namespace razorsignalr_newsmng.Pages.News
                 // Repopulate select lists if validation fails
                 ViewData["CategoryId"] = new SelectList(_categoryRepository.GetSelectList(), "Value", "Text");
                 ViewData["CreatedById"] = new SelectList(_systemAccountRepository.GetSelectList(), "Value", "Text");
+                AvailableTags = TagDAO.Instance.GetAll();
                 return Page();
             }
 
-            // Log the CurrentUser.AccountId to verify its value
-            _logger.LogInformation($"CurrentUser.AccountId: {CurrentUser.AccountId}");
-
             try
             {
+                // Process selected tags
+                if (SelectedTagIds != null && SelectedTagIds.Count > 0)
+                {
+                    NewsArticle.Tags = new List<Tag>();
+                    foreach (var tagId in SelectedTagIds)
+                    {
+                        var tag = TagDAO.Instance.GetOne(tagId);
+                        if (tag != null)
+                        {
+                            NewsArticle.Tags.Add(tag);
+                        }
+                    }
+                }
+
+                // Add the news article with its tags
                 _newsArticleRepository.Add(NewsArticle);
                 await _hubContext.Clients.All.SendAsync("Change");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while saving the news article.");
-                // Optionally, you can add a user-friendly error message to the ModelState
                 ModelState.AddModelError(string.Empty, "An error occurred while saving the news article. Please try again.");
+
+                // Repopulate data for the form
+                ViewData["CategoryId"] = new SelectList(_categoryRepository.GetSelectList(), "Value", "Text");
+                ViewData["CreatedById"] = new SelectList(_systemAccountRepository.GetSelectList(), "Value", "Text");
+                AvailableTags = TagDAO.Instance.GetAll();
                 return Page();
             }
 
