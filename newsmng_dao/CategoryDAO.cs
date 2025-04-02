@@ -41,5 +41,51 @@ namespace newsmng_dao
                 })
                 .ToList<object>();
         }
+
+
+        public Category GetOne(short id)
+        {
+            return _dbContext.Categories
+                .SingleOrDefault(a => a.CategoryId.Equals(id));
+        }
+
+        public List<Category> GetAll()
+        {
+            return _dbContext.Categories
+                .ToList();
+        }
+
+        public void Add(Category a)
+        {
+            Category cur = GetOne(a.CategoryId);
+            if (cur != null)
+            {
+                throw new Exception();
+            }
+            _dbContext.Categories.Add(a);
+            _dbContext.SaveChanges();
+        }
+
+        public void Update(Category a)
+        {
+            Category cur = GetOne(a.CategoryId);
+            if (cur == null)
+            {
+                throw new Exception();
+            }
+            _dbContext.Entry(cur).CurrentValues.SetValues(a);
+            _dbContext.SaveChanges();
+        }
+
+        public void Delete(short id)
+        {
+            Category cur = GetOne(id);
+            if (cur != null)
+            {
+                _dbContext.Categories.Remove(cur);
+                _dbContext.SaveChanges(); // Delete the object
+            }
+        }
+
     }   
 }

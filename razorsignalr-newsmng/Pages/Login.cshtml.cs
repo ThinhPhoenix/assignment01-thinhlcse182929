@@ -17,6 +17,7 @@ namespace razorsignalr_newsmng.Pages
 
         public void OnGet()
         {
+            HttpContext.Session.Clear();
         }
 
         public void OnPost()

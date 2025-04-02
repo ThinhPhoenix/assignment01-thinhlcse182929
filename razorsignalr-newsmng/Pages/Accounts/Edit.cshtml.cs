@@ -20,20 +20,34 @@ namespace razorsignalr_newsmng.Pages.Accounts
             _systemAccountRepository = systemAccountRepository;
         }
 
+        public SystemAccount CurrentUser { get; set;}
+        public bool IsAdmin { get; set; }
+        public short EditId { get; set; }
+
         [BindProperty]
         public SystemAccount SystemAccount { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(short id)
         {
+            EditId = id;
             var user = HttpContext.Session.GetObject<SystemAccount>("user");
+            
             if (user == null){
                 Response.Redirect("/login");
             }
-            else if(user.AccountRole != 0){
-                if (user.AccountId != id){
+            else {
+                // Set CurrentUser for ALL users (admin and non-admin)
+                CurrentUser = user;
+                
+                // Set IsAdmin flag based on user role
+                IsAdmin = user.AccountRole == 0;
+                
+                // Only non-admin users are restricted from editing other accounts
+                if (!IsAdmin && user.AccountId != id){
                     Response.Redirect("/unauthorized");
                 }
             }
+            
             if (id == null)
             {
                 return NotFound();
